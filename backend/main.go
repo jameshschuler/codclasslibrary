@@ -54,6 +54,17 @@ import (
 var routes = flag.Bool("routes", false, "Generate router documentation")
 var db *data.Queries
 
+type Database interface {
+}
+
+type Handler struct {
+	db *data.Queries
+}
+
+func NewHandler(db *data.Queries) *Handler {
+	return &Handler{db: db}
+}
+
 func goDotEnvVariable(key string) string {
 
 	// load .env file
@@ -80,11 +91,7 @@ func main() {
 
 	db = data.New(conn)
 
-	games, err := db.ListGames(ctx)
-	if err != nil {
-		return
-	}
-	log.Println(games)
+	handler := NewHandler(db)
 
 	flag.Parse()
 
@@ -108,7 +115,7 @@ func main() {
 
 	// RESTy routes for "articles" resource
 	r.Route("/loadouts", func(r chi.Router) {
-		r.With(paginate).Get("/", ListLoadouts)
+		r.With(paginate).Get("/", handler.ListLoadouts)
 		r.Post("/", CreateLoadout)       // POST /articles
 		r.Get("/search", SearchArticles) // GET /articles/search
 
@@ -182,9 +189,23 @@ func ListArticles(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func ListLoadouts(w http.ResponseWriter, r *http.Request) {
+// func ListLoadouts(w http.ResponseWriter, r *http.Request) {
+// 	ctx := context.Background()
+// 	loadouts, err := db.ListLoadouts(ctx)
+// 	if err != nil {
+// 		render.Render(w, r, ErrRender(err))
+// 		return
+// 	}
+
+// 	if err := render.RenderList(w, r, NewLoadoutsListResponse(loadouts)); err != nil {
+// 		render.Render(w, r, ErrRender(err))
+// 		return
+// 	}
+// }
+
+func (h *Handler) ListLoadouts(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
-	loadouts, err := db.ListLoadouts(ctx)
+	loadouts, err := h.db.ListLoadouts(ctx)
 	if err != nil {
 		render.Render(w, r, ErrRender(err))
 		return
