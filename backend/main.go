@@ -51,19 +51,11 @@ import (
 	"github.com/joho/godotenv"
 )
 
+// TODO: move db init to db/database.go
+// TODO: move request and response types to types folder
+
 var routes = flag.Bool("routes", false, "Generate router documentation")
 var db *data.Queries
-
-type Database interface {
-}
-
-type Handler struct {
-	db *data.Queries
-}
-
-func NewHandler(db *data.Queries) *Handler {
-	return &Handler{db: db}
-}
 
 func goDotEnvVariable(key string) string {
 
@@ -76,6 +68,68 @@ func goDotEnvVariable(key string) string {
 
 	return os.Getenv(key)
 }
+
+type Application struct {
+	db *data.Queries
+}
+
+type LoadoutModel struct {
+	db *data.Queries
+}
+
+func (m LoadoutModel) ListLoadouts(ctx context.Context) ([]data.Loadout, error) {
+	return m.db.ListLoadouts(ctx)
+}
+
+type LoadoutHandler interface {
+	ListLoadouts(ctx context.Context) ([]data.Loadout, error)
+}
+
+type App struct {
+	// TODO: use pointer?
+	LoadoutHandler LoadoutHandler
+}
+
+func (app *App) HandleListLoadouts(w http.ResponseWriter, r *http.Request) {
+	loadouts, err := app.LoadoutHandler.ListLoadouts(r.Context())
+	if err != nil {
+		render.Render(w, r, ErrRender(err))
+		return
+	}
+
+	if err := render.RenderList(w, r, NewLoadoutsListResponse(loadouts)); err != nil {
+		render.Render(w, r, ErrRender(err))
+		return
+	}
+}
+
+// type LoadoutHandler interface {
+// 	ListLoadouts() (string, error)
+// }
+
+// func SetupRoutes(handler *Handler) *chi.Mux {
+// 	r := chi.NewRouter()
+
+// 	r.Use(cors.Handler(cors.Options{
+// 		AllowedOrigins:   []string{"https://*", "http://*"},
+// 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+// 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+// 		ExposedHeaders:   []string{"Link"},
+// 		AllowCredentials: false,
+// 		MaxAge:           300,
+// 	}))
+// 	r.Use(middleware.RequestID)
+// 	r.Use(middleware.Logger)
+// 	r.Use(middleware.Recoverer)
+// 	r.Use(middleware.URLFormat)
+// 	r.Use(render.SetContentType(render.ContentTypeJSON))
+
+// 	r.Route("/loadouts", func(r chi.Router) {
+// 		r.With(paginate).Get("/", handler.ListLoadouts)
+// 	})
+
+// 	return r
+// }
 
 func main() {
 	ctx := context.Background()
@@ -91,9 +145,13 @@ func main() {
 
 	db = data.New(conn)
 
-	handler := NewHandler(db)
+	app := &App{
+		LoadoutHandler: LoadoutModel{db: db},
+	}
 
 	flag.Parse()
+
+	// TODO: r := SetupRoutes(handler)
 
 	r := chi.NewRouter()
 
@@ -115,7 +173,7 @@ func main() {
 
 	// RESTy routes for "articles" resource
 	r.Route("/loadouts", func(r chi.Router) {
-		r.With(paginate).Get("/", handler.ListLoadouts)
+		r.With(paginate).Get("/", app.HandleListLoadouts)
 		r.Post("/", CreateLoadout)       // POST /articles
 		r.Get("/search", SearchArticles) // GET /articles/search
 
@@ -202,20 +260,6 @@ func ListArticles(w http.ResponseWriter, r *http.Request) {
 // 		return
 // 	}
 // }
-
-func (h *Handler) ListLoadouts(w http.ResponseWriter, r *http.Request) {
-	ctx := context.Background()
-	loadouts, err := h.db.ListLoadouts(ctx)
-	if err != nil {
-		render.Render(w, r, ErrRender(err))
-		return
-	}
-
-	if err := render.RenderList(w, r, NewLoadoutsListResponse(loadouts)); err != nil {
-		render.Render(w, r, ErrRender(err))
-		return
-	}
-}
 
 func ListGames(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
