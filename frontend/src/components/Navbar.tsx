@@ -5,8 +5,10 @@ import {
   navigationMenuTriggerStyle,
 } from '@/components/ui/navigation-menu'
 import { Link } from '@tanstack/react-router'
+import { useAuth } from '../AuthProvider'
 
 export function Navbar() {
+  const { auth } = useAuth()
   return (
     <NavigationMenu className="flex justify-between max-w-100 px-4">
       <NavigationMenuList className="my-2">
@@ -20,21 +22,23 @@ export function Navbar() {
         </NavigationMenuItem>
         <NavigationMenuItem>
           <Link to="/community" className={navigationMenuTriggerStyle()}>
-            Community Library
+            Browse Community Library
           </Link>
         </NavigationMenuItem>
         <NavigationMenuItem>
           <Link to="/loadouts" className={navigationMenuTriggerStyle()}>
-            My Library
+            Your Library
           </Link>
         </NavigationMenuItem>
       </NavigationMenuList>
       <NavigationMenuList>
-        <NavigationMenuItem>
-          <Link to="/login" className={navigationMenuTriggerStyle()}>
-            Documentation
-          </Link>
-        </NavigationMenuItem>
+        {!auth && (
+          <NavigationMenuItem>
+            <Link to="/login" className={navigationMenuTriggerStyle()}>
+              Documentation
+            </Link>
+          </NavigationMenuItem>
+        )}
       </NavigationMenuList>
     </NavigationMenu>
   )

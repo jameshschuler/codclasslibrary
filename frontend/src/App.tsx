@@ -1,3 +1,44 @@
+import { Link, RouterProvider, createRouter } from '@tanstack/react-router'
+import AuthProvider, { useAuth } from './AuthProvider'
+import { routeTree } from './routeTree.gen'
+
+declare module '@tanstack/react-router' {
+  interface Register {
+    router: typeof router
+  }
+}
+
+// Create a new router instance
+const router = createRouter({
+  routeTree,
+  context: {
+    // auth will initially be undefined
+    // We'll be passing down the auth state from within a React component
+    auth: undefined!,
+  },
+  defaultNotFoundComponent: () => {
+    return (
+      <div>
+        <p>Not found!</p>
+        <Link to="/">Go home</Link>
+      </div>
+    )
+  },
+})
+
+function InnerApp() {
+  const { auth } = useAuth()
+  return <RouterProvider router={router} context={{ auth }} />
+}
+
+export function App() {
+  return (
+    <AuthProvider>
+      <InnerApp />
+    </AuthProvider>
+  )
+}
+
 // TODO: delete
 // import { Button } from '@/components/ui/button'
 // import {

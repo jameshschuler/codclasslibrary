@@ -1,17 +1,15 @@
-import { Outlet, createRootRoute } from '@tanstack/react-router'
+import { Outlet, createRootRouteWithContext } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/router-devtools'
 import { Navbar } from '../components/Navbar'
 
-export const Route = createRootRoute({
+interface MyRouterContext {
+  auth: boolean
+}
+
+export const Route = createRootRouteWithContext<MyRouterContext>()({
   component: () => (
     <>
       <Navbar />
-
-      {/* <div className="p-2 flex gap-2">
-        <Link to="/" className="[&.active]:font-bold">
-          CoD Class Library
-        </Link>
-      </div> */}
       <hr />
       <Outlet />
       <TanStackRouterDevtools />
