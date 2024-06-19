@@ -1,8 +1,8 @@
 package loadout
 
 import (
-	"backendv2/gen/postgres/public/model"
-	"backendv2/gen/postgres/public/table"
+	"backend/gen/postgres/public/model"
+	"backend/gen/postgres/public/table"
 	"database/sql"
 	"fmt"
 )

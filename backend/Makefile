@@ -4,10 +4,10 @@ include .env
 # Build the application
 all: build
 
-# TODO:
+# Generate DB files
 db-gen:
-	@echo ${DB_HOST}
-# TODO: jet -source=postgres -user=postgres.zhnruamtktyraecfegqf -password=6JxbuCHuqHo6PR6A -host=aws-0-us-west-1.pooler.supabase.com -port=5432 -dbname=postgres -path=./gen
+	@echo "Generating DB files..."
+	@jet -source=${DB_DATABASE} -user=${DB_USERNAME} -password=${DB_PASSWORD} -host=${DB_HOST} -port=${DB_PORT} -dbname=${DB_DATABASE} -path=./gen
 
 build:
 	@echo "Building..."
@@ -54,7 +54,7 @@ watch:
 	else \
 	    read -p "Go's 'air' is not installed on your machine. Do you want to install it? [Y/n] " choice; \
 	    if [ "$$choice" != "n" ] && [ "$$choice" != "N" ]; then \
-	        go install github.com/cosmtrek/air@latest; \
+	        go install github.com/air-verse/air@latest; \
 	        air; \
 	        echo "Watching...";\
 	    else \

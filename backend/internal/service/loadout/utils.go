@@ -1,7 +1,7 @@
 package loadout
 
 import (
-	"backendv2/gen/postgres/public/model"
+	"backend/gen/postgres/public/model"
 	"net/http"
 
 	"github.com/go-chi/render"

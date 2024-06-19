@@ -1,7 +1,7 @@
 package types
 
 import (
-	"backendv2/gen/postgres/public/model"
+	"backend/gen/postgres/public/model"
 	"net/http"
 )
 

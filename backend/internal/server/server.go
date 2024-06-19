@@ -10,8 +10,8 @@ import (
 	"github.com/go-chi/chi/v5"
 	_ "github.com/joho/godotenv/autoload"
 
-	"backendv2/internal/database"
-	"backendv2/internal/service/loadout"
+	"backend/internal/database"
+	"backend/internal/service/loadout"
 )
 
 type Server struct {

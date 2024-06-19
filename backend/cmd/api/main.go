@@ -1,12 +1,11 @@
 package main
 
 import (
-	"backendv2/internal/server"
+	"backend/internal/server"
 	"fmt"
 )
 
 func main() {
-
 	server := server.NewServer()
 
 	err := server.ListenAndServe()
