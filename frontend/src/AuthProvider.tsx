@@ -38,6 +38,7 @@ const AuthProvider = ({ children }: PropsWithChildren) => {
     const getUser = async () => {
       const { data } = await supabase.auth.getUser()
       const { user: currentUser } = data
+
       setUser(currentUser ?? null)
       setAuth(currentUser ? true : false)
       setLoading(false)

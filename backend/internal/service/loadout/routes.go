@@ -1,7 +1,8 @@
 package loadout
 
 import (
-	"backendv2/internal/types"
+	"backend/internal/middleware"
+	"backend/internal/types"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -17,11 +18,13 @@ func NewHandler(store types.LoadoutStore) *Handler {
 }
 
 func (h *Handler) RegisterRoutes(r *chi.Mux) {
-	r.Get("/loadouts", h.HandleListLoadouts)
+	r.With(middleware.AuthMiddleware).With(middleware.Paginate).Get("/loadouts", h.HandleListLoadouts)
 }
 
-func (h *Handler) HandleListLoadouts(w http.ResponseWriter, r *http.Request) {
-	loadouts, err := h.store.ListLoadouts()
+func (handler *Handler) HandleListLoadouts(w http.ResponseWriter, r *http.Request) {
+	userId := r.Context().Value(middleware.UserIdCtxKey("userId")).(string)
+
+	loadouts, err := handler.store.ListLoadoutsByUser(userId)
 	if err != nil {
 		render.Render(w, r, types.ErrRender(err))
 		return

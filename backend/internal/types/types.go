@@ -7,6 +7,7 @@ import (
 
 type LoadoutStore interface {
 	ListLoadouts() ([]model.Loadouts, error)
+	ListLoadoutsByUser(userId string) ([]model.Loadouts, error)
 }
 
 type CreateLoadoutPayload struct {
