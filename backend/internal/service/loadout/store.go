@@ -17,6 +17,7 @@ func NewStore(db *sql.DB) *Store {
 	return &Store{db: db}
 }
 
+// TODO: Loadouts with details?
 // stmt := table.Loadouts.SELECT(
 // 	table.Loadouts.AllColumns,
 // 	table.Attachments.AllColumns,
@@ -26,12 +27,23 @@ func NewStore(db *sql.DB) *Store {
 // 		LEFT_JOIN(table.Attachments, table.Attachments.ID.EQ(table.LoadAttachment.AttachmentID))).
 // 	ORDER_BY(table.Loadouts.Title.ASC())
 
-func (s *Store) ListLoadouts() ([]model.Loadouts, error) {
+type UserIdString string
+
+func (s UserIdString) String() string {
+	return string(s)
+}
+
+func (s *Store) ListCommunityLoadouts(page, pageSize int64) ([]model.Loadouts, error) {
 	var dest []model.Loadouts
+
+	limit := pageSize
+	offset := (page - 1) * pageSize
 
 	stmt := table.Loadouts.SELECT(
 		table.Loadouts.AllColumns.Except(table.Loadouts.Attachments),
 	).FROM(table.Loadouts).
+		LIMIT(limit).
+		OFFSET(offset).
 		ORDER_BY(table.Loadouts.Title.ASC())
 
 	debugSql := stmt.DebugSql()
@@ -47,21 +59,12 @@ func (s *Store) ListLoadouts() ([]model.Loadouts, error) {
 	return dest, nil
 }
 
-// TODO: refactor this
-// Step 1: Define a custom type based on string
-type MyString string
-
-// Step 2: Implement the String method
-func (s MyString) String() string {
-	return string(s)
-}
-
 func (s *Store) ListLoadoutsByUser(userId string) ([]model.Loadouts, error) {
 	if userId == "" {
 		return nil, fmt.Errorf("userId is required")
 	}
 
-	var stringer = MyString(userId)
+	var stringer = UserIdString(userId)
 
 	var dest []model.Loadouts
 
@@ -71,9 +74,6 @@ func (s *Store) ListLoadoutsByUser(userId string) ([]model.Loadouts, error) {
 		WHERE(
 			table.Loadouts.CreatedBy.EQ(postgres.UUID(stringer))).
 		ORDER_BY(table.Loadouts.Title.ASC())
-
-	debugSql := stmt.DebugSql()
-	fmt.Println(debugSql)
 
 	err := stmt.Query(s.db, &dest)
 

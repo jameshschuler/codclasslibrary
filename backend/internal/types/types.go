@@ -6,7 +6,7 @@ import (
 )
 
 type LoadoutStore interface {
-	ListLoadouts() ([]model.Loadouts, error)
+	ListCommunityLoadouts(page, pageSize int64) ([]model.Loadouts, error)
 	ListLoadoutsByUser(userId string) ([]model.Loadouts, error)
 }
 
