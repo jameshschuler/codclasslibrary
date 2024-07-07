@@ -2,11 +2,10 @@
 
 ### Doing
 
-- Get loadout details
+- Create loadout
 
 ### Todo
 
-- Create loadout
 - Update loadout
 - Delete loadout
 - Search my loadouts
@@ -15,5 +14,5 @@
 - Favorite / unfavorite loadout
 - Search all loadouts
 - Reorganize auth to separate package
-- Reorganize errors to separate package
 - Reorganize backend to feature packages instead of layers
+- Generate api docs
