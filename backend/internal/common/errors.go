@@ -10,9 +10,10 @@ type ErrResponse struct {
 	Err            error `json:"-"` // low-level runtime error
 	HTTPStatusCode int   `json:"-"` // http response status code
 
-	StatusText string `json:"status"`          // user-level status message
-	AppCode    int64  `json:"code,omitempty"`  // application-specific error code
-	ErrorText  string `json:"error,omitempty"` // application-level error message, for debugging
+	StatusText       string            `json:"status"`          // user-level status message
+	AppCode          int64             `json:"code,omitempty"`  // application-specific error code
+	ErrorText        string            `json:"error,omitempty"` // application-level error message, for debugging
+	ValidationErrors map[string]string `json:"validationErrors,omitempty"`
 }
 
 func (e *ErrResponse) Render(w http.ResponseWriter, r *http.Request) error {
@@ -20,12 +21,13 @@ func (e *ErrResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func ErrInvalidRequest(err error) render.Renderer {
+func ErrInvalidRequest(err error, validationErrors map[string]string) render.Renderer {
 	return &ErrResponse{
-		Err:            err,
-		HTTPStatusCode: 400,
-		StatusText:     "Invalid request.",
-		ErrorText:      err.Error(),
+		Err:              err,
+		HTTPStatusCode:   400,
+		StatusText:       "Invalid request.",
+		ErrorText:        err.Error(),
+		ValidationErrors: validationErrors,
 	}
 }
 

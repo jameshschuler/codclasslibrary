@@ -4,9 +4,9 @@ import (
 	"backend/gen/postgres/public/model"
 	"backend/gen/postgres/public/table"
 	"database/sql"
-	"fmt"
 
 	"github.com/go-jet/jet/v2/postgres"
+	"github.com/google/uuid"
 )
 
 type Store struct {
@@ -22,6 +22,7 @@ type LoadoutStore interface {
 	GetCommunityLoadout(loadoutId string) (*LoadoutDetail, error)
 	ListLoadoutsByUser(userId string) (*[]model.Loadouts, error)
 	GetLoadoutByUser(userId, loadoutId string) (*LoadoutDetail, error)
+	CreateLoadout(loadout *model.Loadouts) (*uuid.UUID, error)
 }
 
 func (s *Store) ListCommunityLoadouts(page, pageSize int64) (*[]model.Loadouts, error) {
@@ -37,13 +38,9 @@ func (s *Store) ListCommunityLoadouts(page, pageSize int64) (*[]model.Loadouts, 
 		OFFSET(offset).
 		ORDER_BY(table.Loadouts.Title.ASC())
 
-	debugSql := stmt.DebugSql()
-	fmt.Println(debugSql)
-
 	err := stmt.Query(s.db, &dest)
 
 	if err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 
@@ -51,10 +48,6 @@ func (s *Store) ListCommunityLoadouts(page, pageSize int64) (*[]model.Loadouts, 
 }
 
 func (s *Store) ListLoadoutsByUser(userId string) (*[]model.Loadouts, error) {
-	if userId == "" {
-		return nil, fmt.Errorf("userId is required")
-	}
-
 	var userIdString = Uuid(userId)
 
 	var dest []model.Loadouts
@@ -69,7 +62,6 @@ func (s *Store) ListLoadoutsByUser(userId string) (*[]model.Loadouts, error) {
 	err := stmt.Query(s.db, &dest)
 
 	if err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 
@@ -95,7 +87,6 @@ func (s *Store) GetLoadoutByUser(userId, loadoutId string) (*LoadoutDetail, erro
 	err := stmt.Query(s.db, &foundLoadout)
 
 	if err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 
@@ -118,9 +109,32 @@ func (s *Store) GetCommunityLoadout(loadoutId string) (*LoadoutDetail, error) {
 	err := stmt.Query(s.db, &foundLoadout)
 
 	if err != nil {
-		fmt.Println("Error: ", err)
 		return nil, err
 	}
 
 	return &foundLoadout, nil
+}
+
+func (s *Store) CreateLoadout(loadout *model.Loadouts) (*uuid.UUID, error) {
+	var dest model.Loadouts
+
+	stmt := table.Loadouts.INSERT(
+		table.Loadouts.Title,
+		table.Loadouts.Source,
+		table.Loadouts.SourceURL,
+		table.Loadouts.WeaponName,
+		table.Loadouts.WeaponCategory,
+		table.Loadouts.CreatedBy,
+		table.Loadouts.GameID,
+	).MODEL(loadout).RETURNING(
+		table.Loadouts.ID,
+	)
+
+	err := stmt.Query(s.db, &dest)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &dest.ID, nil
 }
