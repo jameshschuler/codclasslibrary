@@ -22,7 +22,7 @@ type LoadoutStore interface {
 	GetCommunityLoadout(loadoutId string) (*LoadoutDetail, error)
 	ListLoadoutsByUser(userId string) (*[]model.Loadouts, error)
 	GetLoadoutByUser(userId, loadoutId string) (*LoadoutDetail, error)
-	CreateLoadout(loadout *model.Loadouts) (*uuid.UUID, error)
+	CreateLoadout(loadout *model.Loadouts) (uuid.UUID, error)
 }
 
 func (s *Store) ListCommunityLoadouts(page, pageSize int64) (*[]model.Loadouts, error) {
@@ -115,7 +115,8 @@ func (s *Store) GetCommunityLoadout(loadoutId string) (*LoadoutDetail, error) {
 	return &foundLoadout, nil
 }
 
-func (s *Store) CreateLoadout(loadout *model.Loadouts) (*uuid.UUID, error) {
+func (s *Store) CreateLoadout(loadout *model.Loadouts) (uuid.UUID, error) {
+	// TODO: support creating loadouts with known attachments
 	var dest model.Loadouts
 
 	stmt := table.Loadouts.INSERT(
@@ -133,8 +134,8 @@ func (s *Store) CreateLoadout(loadout *model.Loadouts) (*uuid.UUID, error) {
 	err := stmt.Query(s.db, &dest)
 
 	if err != nil {
-		return nil, err
+		return uuid.Nil, err
 	}
 
-	return &dest.ID, nil
+	return dest.ID, nil
 }

@@ -48,8 +48,6 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		log.Printf("Received request from %s", userId)
-
 		ctx := context.WithValue(r.Context(), UserIdCtxKey("userId"), userId)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})

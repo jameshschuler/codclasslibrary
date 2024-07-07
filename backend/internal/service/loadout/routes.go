@@ -151,6 +151,6 @@ func (handler *Handler) HandleCreateLoadout(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	w.Header().Set("Location", fmt.Sprintf("/me/loadout/%s", *createdLoadoutId))
+	w.Header().Set("Location", fmt.Sprintf("/me/loadout/%s", createdLoadoutId))
 	w.WriteHeader(http.StatusCreated)
 }
