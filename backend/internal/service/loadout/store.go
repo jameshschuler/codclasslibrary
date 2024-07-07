@@ -17,23 +17,14 @@ func NewStore(db *sql.DB) *Store {
 	return &Store{db: db}
 }
 
-// TODO: Loadouts with details?
-// stmt := table.Loadouts.SELECT(
-// 	table.Loadouts.AllColumns,
-// 	table.Attachments.AllColumns,
-// ).FROM(
-// 	table.Loadouts.
-// 		LEFT_JOIN(table.LoadAttachment, table.Loadouts.ID.EQ(table.LoadAttachment.LoadoutID)).
-// 		LEFT_JOIN(table.Attachments, table.Attachments.ID.EQ(table.LoadAttachment.AttachmentID))).
-// 	ORDER_BY(table.Loadouts.Title.ASC())
-
-type UserIdString string
-
-func (s UserIdString) String() string {
-	return string(s)
+type LoadoutStore interface {
+	ListCommunityLoadouts(page, pageSize int64) (*[]model.Loadouts, error)
+	GetCommunityLoadout(loadoutId string) (*LoadoutDetail, error)
+	ListLoadoutsByUser(userId string) (*[]model.Loadouts, error)
+	GetLoadoutByUser(userId, loadoutId string) (*LoadoutDetail, error)
 }
 
-func (s *Store) ListCommunityLoadouts(page, pageSize int64) ([]model.Loadouts, error) {
+func (s *Store) ListCommunityLoadouts(page, pageSize int64) (*[]model.Loadouts, error) {
 	var dest []model.Loadouts
 
 	limit := pageSize
@@ -56,15 +47,15 @@ func (s *Store) ListCommunityLoadouts(page, pageSize int64) ([]model.Loadouts, e
 		return nil, err
 	}
 
-	return dest, nil
+	return &dest, nil
 }
 
-func (s *Store) ListLoadoutsByUser(userId string) ([]model.Loadouts, error) {
+func (s *Store) ListLoadoutsByUser(userId string) (*[]model.Loadouts, error) {
 	if userId == "" {
 		return nil, fmt.Errorf("userId is required")
 	}
 
-	var stringer = UserIdString(userId)
+	var userIdString = Uuid(userId)
 
 	var dest []model.Loadouts
 
@@ -72,7 +63,7 @@ func (s *Store) ListLoadoutsByUser(userId string) ([]model.Loadouts, error) {
 		table.Loadouts.AllColumns.Except(table.Loadouts.Attachments),
 	).FROM(table.Loadouts).
 		WHERE(
-			table.Loadouts.CreatedBy.EQ(postgres.UUID(stringer))).
+			table.Loadouts.CreatedBy.EQ(postgres.UUID(userIdString))).
 		ORDER_BY(table.Loadouts.Title.ASC())
 
 	err := stmt.Query(s.db, &dest)
@@ -82,5 +73,54 @@ func (s *Store) ListLoadoutsByUser(userId string) ([]model.Loadouts, error) {
 		return nil, err
 	}
 
-	return dest, nil
+	return &dest, nil
+}
+
+func (s *Store) GetLoadoutByUser(userId, loadoutId string) (*LoadoutDetail, error) {
+	var userIdString = Uuid(userId)
+	var loadoutIdString = Uuid(loadoutId)
+
+	var foundLoadout LoadoutDetail
+
+	stmt := table.Loadouts.SELECT(
+		table.Loadouts.AllColumns,
+		table.Attachments.AllColumns,
+	).FROM(table.Loadouts.
+		LEFT_JOIN(table.LoadAttachment, table.Loadouts.ID.EQ(table.LoadAttachment.LoadoutID)).
+		LEFT_JOIN(table.Attachments, table.Attachments.ID.EQ(table.LoadAttachment.AttachmentID))).
+		WHERE(
+			table.Loadouts.CreatedBy.EQ(postgres.UUID(userIdString)).
+				AND(table.Loadouts.ID.EQ(postgres.UUID(loadoutIdString))))
+
+	err := stmt.Query(s.db, &foundLoadout)
+
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+
+	return &foundLoadout, nil
+}
+
+func (s *Store) GetCommunityLoadout(loadoutId string) (*LoadoutDetail, error) {
+	var loadoutIdString = Uuid(loadoutId)
+	var foundLoadout LoadoutDetail
+
+	stmt := table.Loadouts.SELECT(
+		table.Loadouts.AllColumns,
+		table.Attachments.AllColumns,
+	).FROM(table.Loadouts.
+		LEFT_JOIN(table.LoadAttachment, table.Loadouts.ID.EQ(table.LoadAttachment.LoadoutID)).
+		LEFT_JOIN(table.Attachments, table.Attachments.ID.EQ(table.LoadAttachment.AttachmentID))).
+		WHERE(
+			table.Loadouts.ID.EQ(postgres.UUID(loadoutIdString)))
+
+	err := stmt.Query(s.db, &foundLoadout)
+
+	if err != nil {
+		fmt.Println("Error: ", err)
+		return nil, err
+	}
+
+	return &foundLoadout, nil
 }

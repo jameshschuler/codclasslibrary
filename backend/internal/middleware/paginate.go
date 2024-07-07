@@ -1,10 +1,11 @@
 package middleware
 
 import (
-	"backend/internal/utils"
 	"context"
 	"net/http"
 	"strconv"
+
+	"backend/internal/common"
 
 	"github.com/go-chi/render"
 )
@@ -18,8 +19,6 @@ type Pagination struct {
 
 func Paginate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// TODO: handle edge cases (e.g. negative page number, negative page size, etc.)
-
 		var err error
 		var pageSize int64 = 10
 		var page int64 = 1
@@ -29,7 +28,12 @@ func Paginate(next http.Handler) http.Handler {
 
 			// TODO: return better error message
 			if err != nil {
-				render.Render(w, r, utils.ErrRender(err))
+				render.Render(w, r, common.ErrBadRequest)
+				return
+			}
+
+			if pageSize <= 0 || pageSize > 100 {
+				render.Render(w, r, common.ErrBadRequest)
 				return
 			}
 		}
@@ -39,7 +43,12 @@ func Paginate(next http.Handler) http.Handler {
 
 			// TODO: return better error message
 			if err != nil {
-				render.Render(w, r, utils.ErrRender(err))
+				render.Render(w, r, common.ErrBadRequest)
+				return
+			}
+
+			if page <= 0 {
+				render.Render(w, r, common.ErrBadRequest)
 				return
 			}
 		}
