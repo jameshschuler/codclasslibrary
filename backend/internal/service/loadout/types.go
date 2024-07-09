@@ -35,12 +35,13 @@ type LoadoutDetail struct {
 }
 
 type CreateLoadoutRequest struct {
-	Title          string    `json:"title" validate:"required,lte=150"`
-	Source         string    `json:"source"`
-	SourceUrl      string    `json:"sourceUrl"`
-	WeaponName     string    `json:"weaponName" validate:"required"`
-	WeaponCategory string    `json:"weaponCategory" validate:"required,oneof=pistol shotgun"`
-	GameId         uuid.UUID `json:"gameId" validate:"required"`
+	Title          string      `json:"title" validate:"required,lte=150"`
+	Source         string      `json:"source"`
+	SourceUrl      string      `json:"sourceUrl"`
+	WeaponName     string      `json:"weaponName" validate:"required"`
+	WeaponCategory string      `json:"weaponCategory" validate:"required,oneof=pistol shotgun"`
+	GameId         uuid.UUID   `json:"gameId" validate:"required"`
+	Attachments    []uuid.UUID `json:"attachments"`
 }
 
 func (req *CreateLoadoutRequest) Bind(r *http.Request) error {

@@ -22,7 +22,7 @@ type LoadoutStore interface {
 	GetCommunityLoadout(loadoutId string) (*LoadoutDetail, error)
 	ListLoadoutsByUser(userId string) (*[]model.Loadouts, error)
 	GetLoadoutByUser(userId, loadoutId string) (*LoadoutDetail, error)
-	CreateLoadout(loadout *model.Loadouts) (uuid.UUID, error)
+	CreateLoadout(loadout *model.Loadouts, attachments []uuid.UUID) (uuid.UUID, error)
 }
 
 func (s *Store) ListCommunityLoadouts(page, pageSize int64) (*[]model.Loadouts, error) {
@@ -32,7 +32,7 @@ func (s *Store) ListCommunityLoadouts(page, pageSize int64) (*[]model.Loadouts, 
 	offset := (page - 1) * pageSize
 
 	stmt := table.Loadouts.SELECT(
-		table.Loadouts.AllColumns.Except(table.Loadouts.Attachments),
+		table.Loadouts.AllColumns,
 	).FROM(table.Loadouts).
 		LIMIT(limit).
 		OFFSET(offset).
@@ -53,7 +53,7 @@ func (s *Store) ListLoadoutsByUser(userId string) (*[]model.Loadouts, error) {
 	var dest []model.Loadouts
 
 	stmt := table.Loadouts.SELECT(
-		table.Loadouts.AllColumns.Except(table.Loadouts.Attachments),
+		table.Loadouts.AllColumns,
 	).FROM(table.Loadouts).
 		WHERE(
 			table.Loadouts.CreatedBy.EQ(postgres.UUID(userIdString))).
@@ -78,8 +78,8 @@ func (s *Store) GetLoadoutByUser(userId, loadoutId string) (*LoadoutDetail, erro
 		table.Loadouts.AllColumns,
 		table.Attachments.AllColumns,
 	).FROM(table.Loadouts.
-		LEFT_JOIN(table.LoadAttachment, table.Loadouts.ID.EQ(table.LoadAttachment.LoadoutID)).
-		LEFT_JOIN(table.Attachments, table.Attachments.ID.EQ(table.LoadAttachment.AttachmentID))).
+		LEFT_JOIN(table.LoadoutAttachment, table.Loadouts.ID.EQ(table.LoadoutAttachment.LoadoutID)).
+		LEFT_JOIN(table.Attachments, table.Attachments.ID.EQ(table.LoadoutAttachment.AttachmentID))).
 		WHERE(
 			table.Loadouts.CreatedBy.EQ(postgres.UUID(userIdString)).
 				AND(table.Loadouts.ID.EQ(postgres.UUID(loadoutIdString))))
@@ -101,8 +101,8 @@ func (s *Store) GetCommunityLoadout(loadoutId string) (*LoadoutDetail, error) {
 		table.Loadouts.AllColumns,
 		table.Attachments.AllColumns,
 	).FROM(table.Loadouts.
-		LEFT_JOIN(table.LoadAttachment, table.Loadouts.ID.EQ(table.LoadAttachment.LoadoutID)).
-		LEFT_JOIN(table.Attachments, table.Attachments.ID.EQ(table.LoadAttachment.AttachmentID))).
+		LEFT_JOIN(table.LoadoutAttachment, table.Loadouts.ID.EQ(table.LoadoutAttachment.LoadoutID)).
+		LEFT_JOIN(table.Attachments, table.Attachments.ID.EQ(table.LoadoutAttachment.AttachmentID))).
 		WHERE(
 			table.Loadouts.ID.EQ(postgres.UUID(loadoutIdString)))
 
@@ -115,9 +115,16 @@ func (s *Store) GetCommunityLoadout(loadoutId string) (*LoadoutDetail, error) {
 	return &foundLoadout, nil
 }
 
-func (s *Store) CreateLoadout(loadout *model.Loadouts) (uuid.UUID, error) {
-	// TODO: support creating loadouts with known attachments
+func (s *Store) CreateLoadout(loadout *model.Loadouts, attachments []uuid.UUID) (uuid.UUID, error) {
 	var dest model.Loadouts
+
+	tx, err := s.db.Begin()
+
+	if err != nil {
+		return uuid.Nil, err
+	}
+
+	defer tx.Rollback()
 
 	stmt := table.Loadouts.INSERT(
 		table.Loadouts.Title,
@@ -131,11 +138,41 @@ func (s *Store) CreateLoadout(loadout *model.Loadouts) (uuid.UUID, error) {
 		table.Loadouts.ID,
 	)
 
-	err := stmt.Query(s.db, &dest)
+	err = stmt.Query(s.db, &dest)
+
+	if err != nil {
+		return uuid.Nil, err
+	}
+
+	err = s.insertAttachments(dest.ID, attachments)
+
+	if err != nil {
+		return uuid.Nil, err
+	}
+
+	err = tx.Commit()
 
 	if err != nil {
 		return uuid.Nil, err
 	}
 
 	return dest.ID, nil
+}
+
+func (s *Store) insertAttachments(loadoutId uuid.UUID, attachments []uuid.UUID) error {
+	att := []model.LoadoutAttachment{}
+	for _, a := range attachments {
+		att = append(att, model.LoadoutAttachment{
+			LoadoutID:    loadoutId,
+			AttachmentID: a,
+		})
+	}
+
+	insertAttachmentsStmt := table.LoadoutAttachment.INSERT(table.LoadoutAttachment.LoadoutID, table.LoadoutAttachment.AttachmentID).MODELS(att).RETURNING(
+		table.LoadoutAttachment.AllColumns,
+	)
+
+	_, err := insertAttachmentsStmt.Exec(s.db)
+
+	return err
 }

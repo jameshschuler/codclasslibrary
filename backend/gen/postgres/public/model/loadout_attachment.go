@@ -11,7 +11,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type LoadAttachment struct {
+type LoadoutAttachment struct {
 	LoadoutID    uuid.UUID `sql:"primary_key"`
 	AttachmentID uuid.UUID `sql:"primary_key"`
 }

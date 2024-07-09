@@ -27,7 +27,6 @@ type loadoutsTable struct {
 	WeaponCategory postgres.ColumnString
 	CreatedBy      postgres.ColumnString
 	GameID         postgres.ColumnString
-	Attachments    postgres.ColumnString
 
 	AllColumns     postgres.ColumnList
 	MutableColumns postgres.ColumnList
@@ -78,9 +77,8 @@ func newLoadoutsTableImpl(schemaName, tableName, alias string) loadoutsTable {
 		WeaponCategoryColumn = postgres.StringColumn("weapon_category")
 		CreatedByColumn      = postgres.StringColumn("created_by")
 		GameIDColumn         = postgres.StringColumn("game_id")
-		AttachmentsColumn    = postgres.StringColumn("attachments")
-		allColumns           = postgres.ColumnList{IDColumn, CreatedAtColumn, UpdatedAtColumn, TitleColumn, SourceColumn, SourceURLColumn, WeaponNameColumn, WeaponCategoryColumn, CreatedByColumn, GameIDColumn, AttachmentsColumn}
-		mutableColumns       = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, TitleColumn, SourceColumn, SourceURLColumn, WeaponNameColumn, WeaponCategoryColumn, CreatedByColumn, GameIDColumn, AttachmentsColumn}
+		allColumns           = postgres.ColumnList{IDColumn, CreatedAtColumn, UpdatedAtColumn, TitleColumn, SourceColumn, SourceURLColumn, WeaponNameColumn, WeaponCategoryColumn, CreatedByColumn, GameIDColumn}
+		mutableColumns       = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, TitleColumn, SourceColumn, SourceURLColumn, WeaponNameColumn, WeaponCategoryColumn, CreatedByColumn, GameIDColumn}
 	)
 
 	return loadoutsTable{
@@ -97,7 +95,6 @@ func newLoadoutsTableImpl(schemaName, tableName, alias string) loadoutsTable {
 		WeaponCategory: WeaponCategoryColumn,
 		CreatedBy:      CreatedByColumn,
 		GameID:         GameIDColumn,
-		Attachments:    AttachmentsColumn,
 
 		AllColumns:     allColumns,
 		MutableColumns: mutableColumns,

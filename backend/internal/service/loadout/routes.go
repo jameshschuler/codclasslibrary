@@ -4,6 +4,7 @@ import (
 	"backend/gen/postgres/public/model"
 	"backend/internal/common"
 	"backend/internal/middleware"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -145,9 +146,11 @@ func (handler *Handler) HandleCreateLoadout(w http.ResponseWriter, r *http.Reque
 		CreatedBy:      parsedUserId,
 	}
 
-	createdLoadoutId, err := handler.store.CreateLoadout(loadout)
+	createdLoadoutId, err := handler.store.CreateLoadout(loadout, requestData.Attachments)
 	if err != nil {
-		render.Render(w, r, common.ErrRender(err))
+		// TODO: log errors somewhere else eventually
+		fmt.Println("\nERROR: failed to create loadout", err)
+		render.Render(w, r, common.ErrRender(errors.New("failed to create loadout")))
 		return
 	}
 

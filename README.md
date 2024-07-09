@@ -3,10 +3,11 @@
 ### Doing
 
 - Create loadout
-  - Support providing known attachments
   - Return better error message for `oneof` fields
 
 ### Todo
+
+#### API
 
 - Update loadout
 - Delete loadout
@@ -20,3 +21,17 @@
 - Reorganize backend to feature packages instead of layers
 - Generate api docs
 - Setup CI/CD (render?) for backend and frontend
+- Return attachments with loadout details endpoint
+- Allow upserting attachments when creating a loadout
+
+#### Frontend
+
+- My Library
+
+  - List loadouts
+  - Allow searching
+  - Allow creating new loadouts
+
+- Community Library
+  - List loadouts
+  - Allow searching

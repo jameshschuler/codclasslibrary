@@ -12,6 +12,6 @@ package table
 func UseSchema(schema string) {
 	Attachments = Attachments.FromSchema(schema)
 	Games = Games.FromSchema(schema)
-	LoadAttachment = LoadAttachment.FromSchema(schema)
+	LoadoutAttachment = LoadoutAttachment.FromSchema(schema)
 	Loadouts = Loadouts.FromSchema(schema)
 }

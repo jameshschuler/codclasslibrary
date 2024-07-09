@@ -23,5 +23,4 @@ type Loadouts struct {
 	WeaponCategory string
 	CreatedBy      uuid.UUID
 	GameID         uuid.UUID
-	Attachments    *string
 }
