@@ -8,21 +8,22 @@ import {
 } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
-import { createFileRoute, redirect } from '@tanstack/react-router'
+import { useSuspenseQuery } from '@tanstack/react-query'
+import { createFileRoute } from '@tanstack/react-router'
+import { getCommentsQueryOptions } from '../hooks/useListLoadouts'
 
-export const Route = createFileRoute('/loadouts/')({
-  beforeLoad: ({ context, location }) => {
-    console.log('context', context.auth)
-    if (!context.auth) {
-      throw redirect({
-        to: '/login',
-        search: {
-          redirect: location.href,
-        },
-      })
-    }
-  },
-  component: () => (
+export const Route = createFileRoute('/_auth/loadouts')({
+  loader: (opts) =>
+    opts.context.queryClient.ensureQueryData(getCommentsQueryOptions()),
+  component: Loadouts,
+})
+
+function Loadouts() {
+  const invoicesQuery = useSuspenseQuery(getCommentsQueryOptions())
+  const loadouts = invoicesQuery.data
+
+  console.log(loadouts)
+  return (
     <main className="" style={{ height: 'calc(100% - 56px)' }}>
       <PageHeader title="Your Library" />
       <Separator />
@@ -62,11 +63,11 @@ export const Route = createFileRoute('/loadouts/')({
         <div className="p-4" style={{ flex: '0 0 400px' }}>
           List
           <ScrollArea className="h-[100dvh] rounded-md border p-4">
-            {[1, 2, 3, 4, 5, 6, 7].map((v) => {
+            {loadouts.map((v) => {
               return (
-                <Card key={v} className="my-2">
+                <Card key={v.id} className="my-2">
                   <CardHeader>
-                    <CardTitle>Card Title {v}</CardTitle>
+                    <CardTitle>Card Title {v.title}</CardTitle>
                     <CardDescription>Card Description</CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -83,8 +84,8 @@ export const Route = createFileRoute('/loadouts/')({
         <div className="p-4 flex-1">Details</div>
       </div>
     </main>
-  ),
-})
+  )
+}
 
 interface PageHeaderProps {
   title: string

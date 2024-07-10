@@ -39,7 +39,7 @@ type CreateLoadoutRequest struct {
 	Source         string      `json:"source"`
 	SourceUrl      string      `json:"sourceUrl"`
 	WeaponName     string      `json:"weaponName" validate:"required"`
-	WeaponCategory string      `json:"weaponCategory" validate:"required,oneof=pistol shotgun"`
+	WeaponCategory string      `json:"weaponCategory" validate:"required,oneof=pistol shotgun assaultRifle sniperRifle smg lmg marksmanRifle launcher melee battleRifle"`
 	GameId         uuid.UUID   `json:"gameId" validate:"required"`
 	Attachments    []uuid.UUID `json:"attachments"`
 }

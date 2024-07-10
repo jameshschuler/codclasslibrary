@@ -12,9 +12,10 @@
 
 import { Route as rootRoute } from './routes/__root'
 import { Route as LoginImport } from './routes/login'
+import { Route as AuthImport } from './routes/_auth'
 import { Route as IndexImport } from './routes/index'
-import { Route as LoadoutsIndexImport } from './routes/loadouts.index'
 import { Route as CommunityIndexImport } from './routes/community.index'
+import { Route as AuthLoadoutsImport } from './routes/_auth.loadouts'
 
 // Create/Update Routes
 
@@ -23,19 +24,24 @@ const LoginRoute = LoginImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
-const IndexRoute = IndexImport.update({
-  path: '/',
+const AuthRoute = AuthImport.update({
+  id: '/_auth',
   getParentRoute: () => rootRoute,
 } as any)
 
-const LoadoutsIndexRoute = LoadoutsIndexImport.update({
-  path: '/loadouts/',
+const IndexRoute = IndexImport.update({
+  path: '/',
   getParentRoute: () => rootRoute,
 } as any)
 
 const CommunityIndexRoute = CommunityIndexImport.update({
   path: '/community/',
   getParentRoute: () => rootRoute,
+} as any)
+
+const AuthLoadoutsRoute = AuthLoadoutsImport.update({
+  path: '/loadouts',
+  getParentRoute: () => AuthRoute,
 } as any)
 
 // Populate the FileRoutesByPath interface
@@ -49,6 +55,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexImport
       parentRoute: typeof rootRoute
     }
+    '/_auth': {
+      id: '/_auth'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof AuthImport
+      parentRoute: typeof rootRoute
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -56,18 +69,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginImport
       parentRoute: typeof rootRoute
     }
+    '/_auth/loadouts': {
+      id: '/_auth/loadouts'
+      path: '/loadouts'
+      fullPath: '/loadouts'
+      preLoaderRoute: typeof AuthLoadoutsImport
+      parentRoute: typeof AuthImport
+    }
     '/community/': {
       id: '/community/'
       path: '/community'
       fullPath: '/community'
       preLoaderRoute: typeof CommunityIndexImport
-      parentRoute: typeof rootRoute
-    }
-    '/loadouts/': {
-      id: '/loadouts/'
-      path: '/loadouts'
-      fullPath: '/loadouts'
-      preLoaderRoute: typeof LoadoutsIndexImport
       parentRoute: typeof rootRoute
     }
   }
@@ -77,9 +90,9 @@ declare module '@tanstack/react-router' {
 
 export const routeTree = rootRoute.addChildren({
   IndexRoute,
+  AuthRoute: AuthRoute.addChildren({ AuthLoadoutsRoute }),
   LoginRoute,
   CommunityIndexRoute,
-  LoadoutsIndexRoute,
 })
 
 /* prettier-ignore-end */
@@ -91,22 +104,29 @@ export const routeTree = rootRoute.addChildren({
       "filePath": "__root.tsx",
       "children": [
         "/",
+        "/_auth",
         "/login",
-        "/community/",
-        "/loadouts/"
+        "/community/"
       ]
     },
     "/": {
       "filePath": "index.tsx"
     },
+    "/_auth": {
+      "filePath": "_auth.tsx",
+      "children": [
+        "/_auth/loadouts"
+      ]
+    },
     "/login": {
       "filePath": "login.tsx"
     },
+    "/_auth/loadouts": {
+      "filePath": "_auth.loadouts.tsx",
+      "parent": "/_auth"
+    },
     "/community/": {
       "filePath": "community.index.tsx"
-    },
-    "/loadouts/": {
-      "filePath": "loadouts.index.tsx"
     }
   }
 }

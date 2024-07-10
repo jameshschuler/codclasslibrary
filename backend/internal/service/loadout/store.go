@@ -3,7 +3,9 @@ package loadout
 import (
 	"backend/gen/postgres/public/model"
 	"backend/gen/postgres/public/table"
+	"context"
 	"database/sql"
+	"time"
 
 	"github.com/go-jet/jet/v2/postgres"
 	"github.com/google/uuid"
@@ -20,7 +22,7 @@ func NewStore(db *sql.DB) *Store {
 type LoadoutStore interface {
 	ListCommunityLoadouts(page, pageSize int64) (*[]model.Loadouts, error)
 	GetCommunityLoadout(loadoutId string) (*LoadoutDetail, error)
-	ListLoadoutsByUser(userId string) (*[]model.Loadouts, error)
+	ListLoadoutsByUser(userId string, page, pageSize int64) (*[]model.Loadouts, error)
 	GetLoadoutByUser(userId, loadoutId string) (*LoadoutDetail, error)
 	CreateLoadout(loadout *model.Loadouts, attachments []uuid.UUID) (uuid.UUID, error)
 }
@@ -47,16 +49,21 @@ func (s *Store) ListCommunityLoadouts(page, pageSize int64) (*[]model.Loadouts, 
 	return &dest, nil
 }
 
-func (s *Store) ListLoadoutsByUser(userId string) (*[]model.Loadouts, error) {
+func (s *Store) ListLoadoutsByUser(userId string, page, pageSize int64) (*[]model.Loadouts, error) {
 	var userIdString = Uuid(userId)
 
 	var dest []model.Loadouts
+
+	limit := pageSize
+	offset := (page - 1) * pageSize
 
 	stmt := table.Loadouts.SELECT(
 		table.Loadouts.AllColumns,
 	).FROM(table.Loadouts).
 		WHERE(
 			table.Loadouts.CreatedBy.EQ(postgres.UUID(userIdString))).
+		LIMIT(limit).
+		OFFSET(offset).
 		ORDER_BY(table.Loadouts.Title.ASC())
 
 	err := stmt.Query(s.db, &dest)
@@ -116,6 +123,9 @@ func (s *Store) GetCommunityLoadout(loadoutId string) (*LoadoutDetail, error) {
 }
 
 func (s *Store) CreateLoadout(loadout *model.Loadouts, attachments []uuid.UUID) (uuid.UUID, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
 	var dest model.Loadouts
 
 	tx, err := s.db.Begin()
@@ -138,13 +148,13 @@ func (s *Store) CreateLoadout(loadout *model.Loadouts, attachments []uuid.UUID) 
 		table.Loadouts.ID,
 	)
 
-	err = stmt.Query(s.db, &dest)
+	err = stmt.QueryContext(ctx, tx, &dest)
 
 	if err != nil {
 		return uuid.Nil, err
 	}
 
-	err = s.insertAttachments(dest.ID, attachments)
+	err = insertAttachments(tx, dest.ID, attachments)
 
 	if err != nil {
 		return uuid.Nil, err
@@ -159,7 +169,10 @@ func (s *Store) CreateLoadout(loadout *model.Loadouts, attachments []uuid.UUID) 
 	return dest.ID, nil
 }
 
-func (s *Store) insertAttachments(loadoutId uuid.UUID, attachments []uuid.UUID) error {
+func insertAttachments(tx *sql.Tx, loadoutId uuid.UUID, attachments []uuid.UUID) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
 	att := []model.LoadoutAttachment{}
 	for _, a := range attachments {
 		att = append(att, model.LoadoutAttachment{
@@ -172,7 +185,7 @@ func (s *Store) insertAttachments(loadoutId uuid.UUID, attachments []uuid.UUID) 
 		table.LoadoutAttachment.AllColumns,
 	)
 
-	_, err := insertAttachmentsStmt.Exec(s.db)
+	_, err := insertAttachmentsStmt.ExecContext(ctx, tx)
 
 	return err
 }

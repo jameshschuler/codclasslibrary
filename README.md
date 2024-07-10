@@ -2,8 +2,8 @@
 
 ### Doing
 
-- Create loadout
-  - Return better error message for `oneof` fields
+- List games
+- List weapon categories
 
 ### Todo
 
@@ -12,8 +12,6 @@
 - Update loadout
 - Delete loadout
 - Search my loadouts
-- List games
-- List weapon categories
 - List / Filter / Search Attachments
 - Favorite / unfavorite loadout
 - Search all loadouts
@@ -33,5 +31,8 @@
   - Allow creating new loadouts
 
 - Community Library
+
   - List loadouts
   - Allow searching
+
+- Add eslint and prettier
