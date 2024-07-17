@@ -5,7 +5,12 @@
 - List games
 - List weapon categories
 
-### Todo
+### Vertical (e2e) TODOs:
+
+- Create loadout drawer
+- Allow user to scroll through loadouts using paging
+
+### Features
 
 #### API
 
