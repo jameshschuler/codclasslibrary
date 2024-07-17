@@ -2,6 +2,7 @@ package loadout
 
 import (
 	"backend/gen/postgres/public/model"
+	"backend/internal/common"
 	"net/http"
 
 	"github.com/go-chi/render"
@@ -81,6 +82,22 @@ func NewAttachmentsListResponse(attachments *[]model.Attachments) []render.Rende
 }
 
 func (rd AttachmentResponse) Render(w http.ResponseWriter, r *http.Request) error {
+	// Pre-processing before a response is marshalled and sent across the wire
+	return nil
+}
+
+func NewListLoadoutsResponse(loadouts *[]model.Loadouts, totalCount int, hasNextPage bool) *ListLoadoutResponse {
+	resp := &ListLoadoutResponse{
+		Loadouts: NewLoadoutsListResponse(loadouts),
+		Pagination: &common.PaginationResponse{
+			TotalCount:  totalCount,
+			HasNextPage: hasNextPage,
+		},
+	}
+	return resp
+}
+
+func (rd ListLoadoutResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	// Pre-processing before a response is marshalled and sent across the wire
 	return nil
 }

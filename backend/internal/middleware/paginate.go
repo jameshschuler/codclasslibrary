@@ -12,6 +12,8 @@ import (
 
 type PaginationCtxKey string
 
+var PaginationKey PaginationCtxKey = "pagination"
+
 type Pagination struct {
 	PageSize int64
 	Page     int64

@@ -13,7 +13,7 @@ import (
 func (s *Server) RegisterRoutes(r *chi.Mux) http.Handler {
 	r.Use(cors.Handler(cors.Options{
 		// AllowedOrigins:   []string{"https://foo.com"}, // Use this to allow specific origin hosts
-		// TODO: update this based on env
+		// TODO: update this based on env (figure out what should actually be here)
 		AllowedOrigins: []string{"https://*", "http://*", "http://localhost:5173"},
 		// AllowOriginFunc:  func(r *http.Request, origin string) bool { return true },
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
@@ -22,6 +22,7 @@ func (s *Server) RegisterRoutes(r *chi.Mux) http.Handler {
 		AllowCredentials: true,
 		MaxAge:           300, // Maximum value not ignored by any of major browsers
 	}))
+	// TODO: rate limiter middleware
 	r.Use(middleware.Logger)
 	r.Use(middleware.RequestID)
 	r.Use(middleware.Logger)

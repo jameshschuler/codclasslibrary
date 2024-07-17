@@ -2,6 +2,7 @@ package loadout
 
 import (
 	"backend/gen/postgres/public/model"
+	"backend/internal/common"
 	"net/http"
 	"time"
 
@@ -21,6 +22,11 @@ type LoadoutResponse struct {
 	CreatedBy      uuid.UUID         `json:"createdBy"`
 	GameID         uuid.UUID         `json:"gameId"`
 	Attachments    []render.Renderer `json:"attachments"`
+}
+
+type ListLoadoutResponse struct {
+	Loadouts   []render.Renderer          `json:"loadouts"`
+	Pagination *common.PaginationResponse `json:"pagination"`
 }
 
 type AttachmentResponse struct {

@@ -12,6 +12,7 @@ interface MyRouterContext {
   queryClient: QueryClient
 }
 
+// TODO: can this be a skeleton loader?
 function RouterSpinner() {
   const isLoading = useRouterState({ select: (s) => s.status === 'pending' })
   return <Spinner show={isLoading} />

@@ -27,14 +27,15 @@ func NewHandler(store LoadoutStore, validator *validator.Validate) *Handler {
 func (h *Handler) RegisterRoutes(r *chi.Mux) {
 	r.With(middleware.Paginate).Get("/community/loadouts", h.HandleListCommunityLoadouts)
 	r.Get("/community/loadouts/{loadoutId}", h.HandleGetCommunityLoadout)
-	r.With(middleware.AuthMiddleware).With(middleware.Paginate).Get("/me/loadouts", h.HandleListLoadouts)
+
+	r.With(middleware.AuthMiddleware).With(middleware.Paginate).Get("/me/loadouts", h.HandleListLoadoutsByUser)
 	r.With(middleware.AuthMiddleware).Get("/me/loadouts/{loadoutId}", h.HandleGetLoadout)
 	r.With(middleware.AuthMiddleware).Post("/me/loadouts", h.HandleCreateLoadout)
 }
 
 // TODO: return paging info for List endpoints
 func (handler *Handler) HandleListCommunityLoadouts(w http.ResponseWriter, r *http.Request) {
-	pagination := r.Context().Value(middleware.PaginationCtxKey("pagination")).(*middleware.Pagination)
+	pagination := r.Context().Value(middleware.PaginationKey).(*middleware.Pagination)
 
 	loadouts, err := handler.store.ListCommunityLoadouts(pagination.Page, pagination.PageSize)
 	if err != nil {
@@ -42,15 +43,24 @@ func (handler *Handler) HandleListCommunityLoadouts(w http.ResponseWriter, r *ht
 		return
 	}
 
-	if err := render.RenderList(w, r, NewLoadoutsListResponse(loadouts)); err != nil {
+	totalCount, err := handler.store.GetLoadoutCount("")
+
+	if err != nil {
+		render.Render(w, r, common.ErrRender(err))
+		return
+	}
+
+	hasNextPage := totalCount > int(pagination.Page*pagination.PageSize)
+
+	if err := render.Render(w, r, NewListLoadoutsResponse(loadouts, totalCount, hasNextPage)); err != nil {
 		render.Render(w, r, common.ErrRender(err))
 		return
 	}
 }
 
-func (handler *Handler) HandleListLoadouts(w http.ResponseWriter, r *http.Request) {
-	pagination := r.Context().Value(middleware.PaginationCtxKey("pagination")).(*middleware.Pagination)
-	userId := r.Context().Value(middleware.UserIdCtxKey("userId")).(string)
+func (handler *Handler) HandleListLoadoutsByUser(w http.ResponseWriter, r *http.Request) {
+	pagination := r.Context().Value(middleware.PaginationKey).(*middleware.Pagination)
+	userId := r.Context().Value(middleware.UserIdKey).(string)
 
 	loadouts, err := handler.store.ListLoadoutsByUser(userId, pagination.Page, pagination.PageSize)
 	if err != nil {
@@ -65,7 +75,7 @@ func (handler *Handler) HandleListLoadouts(w http.ResponseWriter, r *http.Reques
 }
 
 func (handler *Handler) HandleGetLoadout(w http.ResponseWriter, r *http.Request) {
-	userId := r.Context().Value(middleware.UserIdCtxKey("userId")).(string)
+	userId := r.Context().Value(middleware.UserIdKey).(string)
 	loadoutId := chi.URLParam(r, "loadoutId")
 
 	if loadoutId == "" {
@@ -117,7 +127,7 @@ func (handler *Handler) HandleGetCommunityLoadout(w http.ResponseWriter, r *http
 }
 
 func (handler *Handler) HandleCreateLoadout(w http.ResponseWriter, r *http.Request) {
-	userId := r.Context().Value(middleware.UserIdCtxKey("userId")).(string)
+	userId := r.Context().Value(middleware.UserIdKey).(string)
 
 	requestData := &CreateLoadoutRequest{}
 	if err := render.Bind(r, requestData); err != nil {

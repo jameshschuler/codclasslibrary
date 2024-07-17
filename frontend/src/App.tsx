@@ -18,6 +18,7 @@ declare module '@tanstack/react-router' {
 
 const router = createRouter({
   routeTree,
+  // TODO: use full screen splash screen?
   defaultPendingComponent: () => (
     <div className={`p-2 text-2xl`}>
       <Spinner />

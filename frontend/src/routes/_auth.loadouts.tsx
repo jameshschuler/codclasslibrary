@@ -12,6 +12,7 @@ import { useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { getCommentsQueryOptions } from '../hooks/useListLoadouts'
 
+// TODO: can this be moved under an _auth folder?
 export const Route = createFileRoute('/_auth/loadouts')({
   loader: (opts) =>
     opts.context.queryClient.ensureQueryData(getCommentsQueryOptions()),

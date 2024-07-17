@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/go-jet/jet/v2/postgres"
+	. "github.com/go-jet/jet/v2/postgres"
 	"github.com/google/uuid"
 )
 
@@ -25,6 +26,7 @@ type LoadoutStore interface {
 	ListLoadoutsByUser(userId string, page, pageSize int64) (*[]model.Loadouts, error)
 	GetLoadoutByUser(userId, loadoutId string) (*LoadoutDetail, error)
 	CreateLoadout(loadout *model.Loadouts, attachments []uuid.UUID) (uuid.UUID, error)
+	GetLoadoutCount(userId string) (int, error)
 }
 
 func (s *Store) ListCommunityLoadouts(page, pageSize int64) (*[]model.Loadouts, error) {
@@ -167,6 +169,25 @@ func (s *Store) CreateLoadout(loadout *model.Loadouts, attachments []uuid.UUID) 
 	}
 
 	return dest.ID, nil
+}
+
+func (s *Store) GetLoadoutCount(userId string) (int, error) {
+	if userId != "" {
+		// TODO:
+	}
+
+	totalCountQuery := table.Loadouts.SELECT(COUNT(STAR).AS("totalCount")).FROM(table.Loadouts)
+
+	var result struct {
+		TotalCount int `sql:"totalCount"`
+	}
+	err := totalCountQuery.Query(s.db, &result)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return result.TotalCount, nil
 }
 
 func insertAttachments(tx *sql.Tx, loadoutId uuid.UUID, attachments []uuid.UUID) error {

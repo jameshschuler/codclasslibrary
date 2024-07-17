@@ -13,7 +13,9 @@ import (
 
 var hmacSecret = os.Getenv("SUPABASE_JWT_SECRET")
 
-type UserIdCtxKey string
+type UserContextKey string
+
+var UserIdKey UserContextKey = "userId"
 
 type Claims struct {
 	Email  string `json:"email"`
@@ -48,7 +50,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), UserIdCtxKey("userId"), userId)
+		ctx := context.WithValue(r.Context(), UserIdKey, userId)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

@@ -31,6 +31,7 @@ type UseCommentsOptions = {
   queryConfig?: QueryConfig<typeof getComments>
 }
 
+// TODO: use useInfiniteQuery
 export const useComments = ({
   discussionId,
   queryConfig,
