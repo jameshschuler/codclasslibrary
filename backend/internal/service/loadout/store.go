@@ -172,11 +172,15 @@ func (s *Store) CreateLoadout(loadout *model.Loadouts, attachments []uuid.UUID) 
 }
 
 func (s *Store) GetLoadoutCount(userId string) (int, error) {
-	if userId != "" {
-		// TODO:
-	}
+	var userIdString = Uuid(userId)
 
-	totalCountQuery := table.Loadouts.SELECT(COUNT(STAR).AS("totalCount")).FROM(table.Loadouts)
+	var totalCountQuery SelectStatement
+	if userId != "" {
+		totalCountQuery = table.Loadouts.SELECT(COUNT(STAR).AS("totalCount")).
+			FROM(table.Loadouts).WHERE(table.Loadouts.CreatedBy.EQ(postgres.UUID(userIdString)))
+	} else {
+		totalCountQuery = table.Loadouts.SELECT(COUNT(STAR).AS("totalCount")).FROM(table.Loadouts)
+	}
 
 	var result struct {
 		TotalCount int `sql:"totalCount"`

@@ -68,7 +68,16 @@ func (handler *Handler) HandleListLoadoutsByUser(w http.ResponseWriter, r *http.
 		return
 	}
 
-	if err := render.RenderList(w, r, NewLoadoutsListResponse(loadouts)); err != nil {
+	totalCount, err := handler.store.GetLoadoutCount(userId)
+
+	if err != nil {
+		render.Render(w, r, common.ErrRender(err))
+		return
+	}
+
+	hasNextPage := totalCount > int(pagination.Page*pagination.PageSize)
+
+	if err := render.Render(w, r, NewListLoadoutsResponse(loadouts, totalCount, hasNextPage)); err != nil {
 		render.Render(w, r, common.ErrRender(err))
 		return
 	}
